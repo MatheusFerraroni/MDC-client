@@ -129,19 +129,19 @@ class Chat extends React.Component {
     const search_params = this.getSearch()
     const keys = Object.keys(search_params)
 
-    if ( !keys.includes('server_url') || !keys.includes('server_key') || !keys.includes('email') || !keys.includes('name') || !keys.includes('user_uid') ){
-      window.location = window.location.origin
-    }
+    // if ( !keys.includes('server_url') || !keys.includes('server_key') || !keys.includes('email') || !keys.includes('name') || !keys.includes('user_uid') ){
+    //   window.location = window.location.origin
+    // }
 
     // eslint-disable-next-line no-restricted-globals
     history.pushState(history.state, "/chat", "/chat");
 
     this.state = {
-      server_url: search_params['server_url'],
-      server_key: search_params['server_key'],
-      email: search_params['email'],
-      name: search_params['name'],
-      user_uid: search_params['user_uid'],
+      server_url: "http://localhost:8888/",//search_params['server_url'],
+      server_key: "1033b11e-ea82-11ec-8fea-0242ac120002",//search_params['server_key'],
+      email: "mail@mail.com",//search_params['email'],
+      name: "nomenome",//search_params['name'],
+      user_uid: "e3c4fad9-0153-412f-9995-ebb0a0a10452",//search_params['user_uid'],
 
       status: 'first',
 
@@ -151,7 +151,6 @@ class Chat extends React.Component {
 
       'message': '',
     };
-    console.log(this.state)
     
 
     this.handleInputChange = this.handleInputChange.bind(this);
@@ -159,10 +158,12 @@ class Chat extends React.Component {
     this.requestStory = this.requestStory.bind(this);
     this.setStoryCompleted = this.setStoryCompleted.bind(this);
     this.setStoryCanceled = this.setStoryCanceled.bind(this);
+    this.changeStory = this.changeStory.bind(this)
 
     this.mapi = new ApiMDC(this.state.server_url, this.state.server_key);
 
     this.messagesEnd = null;
+
 
 
     setTimeout(this.requestStory, 100);
@@ -234,6 +235,23 @@ class Chat extends React.Component {
     )
   }
 
+  changeStory(){
+    this.setState({'status': 'loading'})
+
+    const dis = this;
+    this.mapi.request_story(this.state.email).then(function(resp){
+      if(resp.status===200){
+        if(resp.data.status==="success"){
+          dis.process_new_story(resp.data)
+        }else{
+          alert(resp.data.status)
+        }
+      }else{
+        alert("Not able to connect with credentials and endpoint.")
+      }
+    })
+  }
+
   setStoryCanceled(){
     const dis = this;
     if (window.confirm('Você tem certeza de que deseja encerrar essa história? Esta ação removerá essa história do processo de geração e é irreversível.')){
@@ -278,7 +296,7 @@ class Chat extends React.Component {
     if (this.state.story!=null && this.state.status!=='loading'){
       story_now = this.state.story.content
       turn_now = ((this.state.story.turn_now%2===1) ? 'Cliente' : 'Sistema');
-      story_now = story_now.split("\n")
+      story_now = story_now.split("\n").filter(x => x!="")
       story_id = this.state.story.idd
     }
 
@@ -298,6 +316,7 @@ class Chat extends React.Component {
                 <span className="text-sm text-white">Ações da história</span>
               </div>
               <div className='block w-full'>
+                <button onClick={this.changeStory} className="mx-1 inline-flex items-center py-2 px-4 text-sm font-medium text-center text-gray-900 bg-white rounded-lg border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-700 dark:focus:ring-gray-700">Trocar História</button>
                 <button onClick={this.setStoryCanceled} className="mx-1 inline-flex items-center py-2 px-4 text-sm font-medium text-center text-gray-900 bg-white rounded-lg border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-700 dark:focus:ring-gray-700">Excluir</button>
                 <button onClick={this.setStoryCompleted} className="mx-1 inline-flex items-center py-2 px-4 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Completar</button>
               </div>
@@ -355,6 +374,21 @@ class Chat extends React.Component {
     }
     const label_talking_to = ((this.state.story.turn_now%2===0) ? 'Cliente' : 'Sistema');
     const dis = this;
+    
+
+
+    let turnos_to_show = [];
+    let aux_side = 'left'
+    for(let i=this.state.story.turns.length-1; i>=0;i--){
+      turnos_to_show.push({
+        text: dis.state.story.turns[i].text,
+        side: aux_side
+      })
+      aux_side = (aux_side==="left") ? 'right' : 'left'
+    };
+
+    turnos_to_show = turnos_to_show.reverse()
+
     return (
           <div className="w-full h-screen">
             <div className="relative flex items-center p-3 border-b border-gray-300 h-[6vh] min-h-fit">
@@ -367,31 +401,33 @@ class Chat extends React.Component {
             </div>
             <div className="relative w-full p-6 overflow-y-auto h-[88vh]">
               <ul className="space-y-2">
-                {this.state.story.turns.map(function(a, i){
-                  let side = ''
-                  let color = ''
+                {
+                  turnos_to_show.map(function(a, i){
+                    let side = ''
+                    let color = ''
 
-                  if (i%2===0){
-                    side = 'justify-start'
-                    color = 'bg-gray-700'
-                  }else{
-                    side = 'justify-end'
-                    color = 'bg-green-700'
-                  }
+                    if (a.side==='left'){
+                      side = 'justify-start'
+                      color = 'bg-gray-700'
+                    }else{
+                      side = 'justify-end'
+                      color = 'bg-green-700'
+                    }
 
-                  const li_class = side+' flex text-white'
-                  const bubble_class = color+' relative max-w-xl px-4 py-2 rounded shadow'
-                  return (
-                    <li key={i} className={li_class}>
-                      <div className={bubble_class}>
-                        <span className="block">{a.text}</span>
-                      </div>
-                    </li>
+                    const li_class = side+' flex text-white'
+                    const bubble_class = color+' relative max-w-xl px-4 py-2 rounded shadow'
+                    return (
+                      <li key={i} className={li_class}>
+                        <div className={bubble_class}>
+                          <span className="block">{a.text}</span>
+                        </div>
+                      </li>
+                      )
+                    }
                   )
-                })}
-                <div style={{ float:"left", clear: "both" }}
-             ref={(el) => { dis.messagesEnd = el; }}>
-        </div>
+                }
+                { this.get_last_bubble_chat() }
+                <div style={{ float:"left", clear: "both" }} ref={(el) => { dis.messagesEnd = el; }}> </div>
               </ul>
             </div>
 
@@ -419,6 +455,25 @@ class Chat extends React.Component {
           </div>)
   }
 
+  get_last_bubble_chat(){
+    const turn = this.state.story.turn_now
+    const history_turns = this.state.story.content.split("\n").filter(x => x!="")
+    
+    let message = null;
+
+    if (turn>=history_turns.length){
+      message = "Fechar a história?"
+    }else{
+      message = history_turns[turn]
+    }
+
+    return (<li key='last_bubble' className="justify-center flex text-black">
+                      <div className="bg-neutral-200 relative max-w-xl px-4 py-2 rounded shadow">
+                        <span className="block"> {message} </span>
+                      </div>
+                    </li>)
+  }
+
 
   submit_message(){
     this.setState({'status': 'loading'})
@@ -439,7 +494,7 @@ class Chat extends React.Component {
     this.setState({story_id: data.story_id})
     this.setState({story: story})
     this.setState({status: 'writing_story'})
-    this.setState({message:''})
+    this.setState({message: ''})
   }
 
   scrollToBottom () {
