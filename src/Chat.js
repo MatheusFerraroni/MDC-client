@@ -129,19 +129,19 @@ class Chat extends React.Component {
     const search_params = this.getSearch()
     const keys = Object.keys(search_params)
 
-    // if ( !keys.includes('server_url') || !keys.includes('server_key') || !keys.includes('email') || !keys.includes('name') || !keys.includes('user_uid') ){
-    //   window.location = window.location.origin
-    // }
+    if ( !keys.includes('server_url') || !keys.includes('server_key') || !keys.includes('email') || !keys.includes('name') || !keys.includes('user_uid') ){
+      window.location = window.location.origin
+    }
 
     // eslint-disable-next-line no-restricted-globals
     history.pushState(history.state, "/chat", "/chat");
 
     this.state = {
-      server_url: "http://localhost:8888/",//search_params['server_url'],
-      server_key: "1033b11e-ea82-11ec-8fea-0242ac120002",//search_params['server_key'],
-      email: "mail@mail.com",//search_params['email'],
-      name: "nomenome",//search_params['name'],
-      user_uid: "e3c4fad9-0153-412f-9995-ebb0a0a10452",//search_params['user_uid'],
+      server_url: search_params['server_url'], // "http://localhost:8888/",
+      server_key: search_params['server_key'], // "1033b11e-ea82-11ec-8fea-0242ac120002",
+      email: search_params['email'], // "mail@mail.com",
+      name: search_params['name'], // "nomenome",
+      user_uid: search_params['user_uid'], // "e3c4fad9-0153-412f-9995-ebb0a0a10452",
 
       status: 'first',
 

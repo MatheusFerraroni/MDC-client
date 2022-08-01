@@ -60,9 +60,9 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      server_url: "http://localhost:8888/", //"https://mdc-server.herokuapp.com/",
+      server_url: "https://mdc-server.herokuapp.com/", //"https://mdc-server.herokuapp.com/",
       server_key: "1033b11e-ea82-11ec-8fea-0242ac120002",
-      email: "mail@mail.com",
+      email: "",
       name: "",
       user_uid: "",
 

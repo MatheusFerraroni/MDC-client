@@ -23,7 +23,7 @@ function getSearch() {
 const search_params = getSearch()
 const keys = Object.keys(search_params)
 
-if ( keys.includes('server_url') && keys.includes('server_key') && keys.includes('email') && keys.includes('name') && keys.includes('user_uid') || true){
+if ( keys.includes('server_url') && keys.includes('server_key') && keys.includes('email') && keys.includes('name') && keys.includes('user_uid')){
     root.render(
         <Chat />
     );
